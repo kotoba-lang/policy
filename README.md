@@ -1,5 +1,7 @@
 # policy-clj (認可ポリシー)
 
+[![CI](https://github.com/kotoba-lang/policy/actions/workflows/ci.yml/badge.svg)](https://github.com/kotoba-lang/policy/actions/workflows/ci.yml)
+
 Handle **ABAC/RBAC authorization policy as EDN/Clojure data** in portable Clojure —
 every namespace is `.cljc`, with **zero third-party runtime deps**, so it runs on the
 JVM, ClojureScript, and Clojure-on-WASM hosts (SCI). A policy is plain data you can
