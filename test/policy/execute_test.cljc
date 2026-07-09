@@ -178,3 +178,34 @@
              :policy/roles     {}}]
     (is (not (v/valid? pol)))
     (is (some #(= :policy/unknown-algorithm (:policy/code %)) (v/problems pol)))))
+
+;; ---------------------------------------------------------------------------
+;; Test 13 — a resolved attribute value of `false` must not be coerced to nil
+;; (default-ports' resolve-attr-default previously used `or` to fall through
+;; to a string-key lookup, which treats a genuine `false` the same as "not
+;; found" -- silently breaking any condition comparing an attribute to false)
+;; ---------------------------------------------------------------------------
+
+(deftest false-attribute-value-is-not-coerced-to-nil
+  (let [pol (-> (m/policy "p-verify")
+                (m/deny  "must-verify" (m/leaf "user.verified" := false))
+                (m/allow "default-allow"))
+        pts (e/default-ports)]
+    (testing "user.verified = false correctly matches the deny rule"
+      (let [r (e/decide pts pol {:user {:verified false}})]
+        (is (= :deny (:policy/decision r)))
+        (is (= "must-verify" (:policy/by r)))))
+    (testing "user.verified = true does not match the deny rule"
+      (is (= :allow (:policy/decision (e/decide pts pol {:user {:verified true}})))))
+    (testing "attribute entirely absent does not match := false either"
+      (is (= :allow (:policy/decision (e/decide pts pol {:user {}}))))))
+  (testing "string-key fallback still works when the keyword key is absent"
+    (let [pol (-> (m/policy "p-verify2")
+                  (m/deny "must-verify" (m/leaf "user.verified" := false))
+                  (m/allow "default-allow"))]
+      (is (= :deny (:policy/decision (e/decide (e/default-ports) pol {:user {"verified" false}}))))))
+  (testing "another falsy-but-present value (0) is also preserved, not just false"
+    (let [pol (-> (m/policy "p-balance")
+                  (m/deny "zero-balance" (m/leaf "account.balance" := 0))
+                  (m/allow "default-allow"))]
+      (is (= :deny (:policy/decision (e/decide (e/default-ports) pol {:account {:balance 0}})))))))
