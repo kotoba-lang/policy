@@ -118,15 +118,22 @@
 
 ;; --- host-free default ports ---
 
+(def ^:private not-found ::not-found)
+
 (defn- resolve-attr-default
   "Resolve a dotted attr-path (\"user.role\") against a nested request map.
   Each segment is tried first as a keyword key, then as a string key.
-  Returns nil if any segment is missing."
+  Returns nil if any segment is missing. Falls through to the string-key
+  lookup only when the keyword key is genuinely absent -- a resolved value
+  of `false` (or any other falsy-but-present value) must be preserved, not
+  coerced to nil (an `or`-based fallback would otherwise treat a real
+  `false` attribute value the same as \"not found\", silently breaking any
+  policy condition that compares an attribute against `false`)."
   [attr-path request]
   (reduce (fn [m k]
             (when (some? m)
-              (or (get m (keyword k))
-                  (get m k))))
+              (let [kw-v (get m (keyword k) not-found)]
+                (if (= kw-v not-found) (get m k) kw-v))))
           request
           (str/split attr-path #"\.")))
 
