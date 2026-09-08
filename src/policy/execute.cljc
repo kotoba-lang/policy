@@ -28,7 +28,7 @@
 
   RBAC helper: `permits?` checks whether a named role holds a permission string
   via :policy/roles, without touching IAttribute."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [policy.ports   :as p]))
 
 ;; --- condition evaluation ---
