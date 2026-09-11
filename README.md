@@ -113,5 +113,5 @@ decision engine stays pure orchestration. The same pattern is used in bpmn-clj
 ## Test
 
 ```
-clojure -X:test
+kbb -X:test
 ```
